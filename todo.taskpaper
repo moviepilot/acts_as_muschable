@@ -5,3 +5,4 @@ Interface:
 - Foo.table_name according to shard @done
 - Foo.table_name is base_musch table when in test or dev environment @done
 - Name aller shards? Fortlaufende nummern? 
+- Does each request complete it's life in one single thread?

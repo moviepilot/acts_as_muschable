@@ -11,3 +11,7 @@ require File.join(File.dirname(__FILE__), '..', 'init')
 class MuschableModel < ActiveRecord::Base
   acts_as_muschable
 end
+
+class UnmuschableModel < ActiveRecord::Base
+  
+end
