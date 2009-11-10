@@ -47,5 +47,6 @@ ActiveRecord::Schema.define :version => 0 do
     t.string   "name"
   end
   add_index "other_muschable_models", ["id"], :name => "index_on_id"
+
   
 end

@@ -47,6 +47,7 @@ module ActiveRecord
                   corrupt_shards << shard if shard_schema!=base_schema or base_schema.blank?
                 end
               end
+
             end
             
             def self.drop_shards(amount)

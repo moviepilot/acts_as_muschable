@@ -39,7 +39,7 @@ describe "Acts as Muschable" do
     
     it "should drop all shards during #drop_shards"
     it "should create all shards during #initialize_shards"
-    
+
     #
     # We're keepin' it clean (not) (but kinda)
     #
