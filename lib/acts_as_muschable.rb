@@ -39,7 +39,8 @@ module ActiveRecord
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
-            def self.assure_shards_health
+            def self.detect_corrupt_shards
+              
             end
             
             def self.drop_shards(amount)
