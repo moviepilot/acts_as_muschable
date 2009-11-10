@@ -24,6 +24,8 @@ module ActiveRecord
               end
             end
             
+            class << self; attr_reader :shard_amount end
+            @shard_amount = nil
             def self.shard_amount=(amount)
               ensure_positive_int('shard_amount', amount)
               @shard_amount = amount
@@ -37,8 +39,12 @@ module ActiveRecord
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
-            class << self; attr_reader :shard_amount end
-            @shard_amount = nil
+            def self.drop_shards(amount)
+              ensure_positive_int('parameter for #drop_shards', amount)
+              0.upto(amount-1) do |i|
+                connection.execute("DROP TABLE \#{table_name_for_shard(i)}")
+              end
+            end
             
             def self.table_name_with_shard
               ensure_setup

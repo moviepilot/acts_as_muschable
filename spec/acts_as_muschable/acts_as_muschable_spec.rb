@@ -78,10 +78,12 @@ describe "Acts as Muschable" do
     end
     
     it "should have a method MuschableModel.initialize_shards to create MuschableModel.shard_amount new shards" do
-      MuschableModel.shard_amount=32
+      MuschableModel.activate_shard(0)
       connection = mock("Connection")
-      MuschableModel.should_receive(:connection).once.and_return connection
-      0.upto(31) do |i|
+      connection.stub!(:table_exists?).with(any_args).and_return true
+      MuschableModel.should_receive(:connection).exactly(16).and_return connection
+      
+      0.upto(15) do |i|
         query = "CREATE TABLE muschable_models#{i} LIKE muschable_models"
         connection.should_receive(:execute).with(query).once
       end
@@ -89,8 +91,28 @@ describe "Acts as Muschable" do
       MuschableModel.initialize_shards
     end
     
+    it "should have a method MuschableModel.drop_shards(12) to drop shards 0...12" do
+      MuschableModel.activate_shard(0)
+      connection = mock("Connection")
+      connection.stub!(:table_exists?).with(any_args).and_return true
+      MuschableModel.should_receive(:connection).exactly(12).and_return connection
+      
+      0.upto(11) do |i|
+        query = "DROP TABLE muschable_models#{i}"
+        connection.should_receive(:execute).with(query).once
+      end
+      
+      MuschableModel.drop_shards(12)
+    end
     
-    it "should have a method MuschableModel.drop_shards(15) to drop shards 0...15"
+    [-1, "1", "a"].each do |i|
+      it "should not allow #drop_shards(#{i})" do
+        lambda{
+          MuschableModel.drop_shards(i)
+        }.should raise_error(ArgumentError, 'Only positive integers are allowed as parameter for #drop_shards')
+      end
+    end
+    
     it "should have a method MuschableModel.assure_shard_health that goes through all shards and makes sure their structure equals that of the base table"
   end
 end

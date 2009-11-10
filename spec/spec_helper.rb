@@ -1,3 +1,5 @@
+ENV["RAILS_ENV"] = "test"
+
 require 'rubygems'
 require 'active_support'
 require 'active_record'
