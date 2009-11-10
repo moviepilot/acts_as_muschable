@@ -113,6 +113,12 @@ describe "Acts as Muschable" do
       end
     end
     
-    it "should have a method MuschableModel.assure_shard_health that goes through all shards and makes sure their structure equals that of the base table"
+    it "should have a method MuschableModel.assure_shards_health that goes through all shards and makes sure their structure equals that of the base table" do
+      MuschableModel.should respond_to(:assure_shards_health)
+    end
+  end
+  
+  describe "integration tests with database access" do
+    
   end
 end

@@ -39,6 +39,9 @@ module ActiveRecord
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
+            def self.assure_shards_health
+            end
+            
             def self.drop_shards(amount)
               ensure_positive_int('parameter for #drop_shards', amount)
               0.upto(amount-1) do |i|
