@@ -19,7 +19,7 @@ module ActiveRecord
           self.class_eval <<-RUBY
 
             def self.shard_amount=(last)
-              raise ArgumentError, 'Only integers are allowed as shard_amount' unless last.is_a?(Integer)
+              raise ArgumentError, 'Only positive integers are allowed as shard_amount' unless last.is_a?(Integer) and last>=0
               @shard_amount = last
             end
             
@@ -32,6 +32,7 @@ module ActiveRecord
               
               shard = Thread.current[:shards][self.name.to_sym]
               raise ArgumentError, 'No shard has been activated' unless shard
+              
               "\#{table_name_without_shard}\#{shard}"
             end
             
@@ -41,13 +42,15 @@ module ActiveRecord
             end
             
             def self.activate_shard(shard)
-              raise ArgumentError, 'Only integers are allowed as shard identifiers' unless shard.is_a?(Integer)
+              raise ArgumentError, 'Only positive integers are allowed as shard identifiers'                unless shard.is_a?(Integer) and shard>=0
+              raise ArgumentError, "Can't activate shard, out of range. Adjust \#{self.name}.shard_amount=" unless shard<@shard_amount
+
               ensure_setup
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
             def self.ensure_setup
-              raise ArgumentError, "You have to set #{self.class.name}.shard_amount" if @shard_amount.nil?
+              raise ArgumentError, "You have to set \#{self.name}.shard_amount" if @shard_amount.nil?
               Thread.current[:shards] ||= Hash.new
             end
             

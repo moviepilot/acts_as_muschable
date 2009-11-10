@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe "Acts as Muschable" do
   
-  describe "Changing active shards" do
+  describe "changing active shards" do
     it "should throw an exception when MuschableModel.table_name is called before MuschableModel.set_shard" do
       lambda{ 
         MuschableModel.table_name
@@ -24,13 +24,17 @@ describe "Acts as Muschable" do
       MuschableModel.table_name.should == "muschable_models1"
     end
     
-    it "should only accept numeric shard identifiers" do
+    it "should only accept positive numeric shard identifiers" do
       lambda{
         MuschableModel.activate_shard("0")
-      }.should raise_error(ArgumentError, 'Only integers are allowed as shard identifiers')
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifiers')
+      lambda{
+        MuschableModel.activate_shard(-1)
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifiers')
     end
     
     it "should be somewhat thread safe" do
+      MuschableModel.shard_amount = 1_000_000
       threads = []
       300.times do
         threads << Thread.new do
@@ -44,7 +48,7 @@ describe "Acts as Muschable" do
     end
   end
   
-  describe "Managing the amount of shards" do
+  describe "managing the amount of shards" do
     it "should have a method to set MuschableModel.shard_amount=" do
       MuschableModel.shard_amount = 1
       MuschableModel.shard_amount.should == 1
@@ -60,10 +64,19 @@ describe "Acts as Muschable" do
     it "should not accept non-integers as MuschableModel.shard_amount=" do
       lambda{
         MuschableModel.shard_amount = "15"
-      }.should raise_error(ArgumentError, 'Only integers are allowed as shard_amount')
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard_amount')
+      lambda{
+        MuschableModel.shard_amount = -1
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard_amount')
     end
     
-    it "should not accept a shard identifier larger MuschableModel.shard_amount"
+    it "should not accept a shard identifier larger MuschableModel.shard_amount" do
+      MuschableModel.shard_amount = 16
+      lambda{
+        MuschableModel.activate_shard(16)
+      }.should raise_error(ArgumentError, "Can't activate shard, out of range. Adjust MuschableModel.shard_amount=")
+    end
+    
     it "should have a method MuschableModel.initialize_shards to drop(!!!) all existing shards and create new ones"
   end
 end
