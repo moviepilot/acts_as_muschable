@@ -40,11 +40,11 @@ module ActiveRecord
             end
             
             def self.detect_corrupt_shards
-              base_schema = connection.execute("DESCRIBE \#{table_name_without_shard}")
+              base_schema = table_schema(table_name_without_shard)
               returning Array.new do |corrupt_shards|
                 0.upto(shard_amount-1) do |shard|
-                  shard_schema = connection.execute("DESCRIBE \#{table_name_for_shard(i)}")
-                  corrupt_shards << shard if shard_schema!=base_schema
+                  shard_schema = table_schema(table_name_for_shard(shard))
+                  corrupt_shards << shard if shard_schema!=base_schema or base_schema.blank?
                 end
               end
             end
@@ -100,6 +100,19 @@ module ActiveRecord
             
             def self.ensure_positive_int(name, i)
               raise ArgumentError, "Only positive integers are allowed as \#{name}" unless i.is_a?(Integer) and i>=0
+            end
+            
+            def self.table_schema(table_name)
+              result = connection.execute "SHOW CREATE TABLE \#{table_name}"
+              schema = ""
+              result.each do |row|
+                schema << row[1]
+              end
+              schema.match(/[^\(]+(.*)$/m)[1]
+            rescue ActiveRecord::StatementInvalid
+              ""
+            ensure
+              result.free if result
             end
             
             self.shard_amount = #{args.last[:shard_amount] || 0 }

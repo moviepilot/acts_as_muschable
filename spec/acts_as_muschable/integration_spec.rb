@@ -21,7 +21,6 @@ describe "Acts as Muschable" do
     
     before(:all) do
       puts "\nRunning integration tests"
-      debugger
       @conn = MuschableModel.connection
     end
     

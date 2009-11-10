@@ -29,5 +29,4 @@ class MuschableModel < ActiveRecord::Base
 end
 
 class UnmuschableModel < ActiveRecord::Base
-  
 end
