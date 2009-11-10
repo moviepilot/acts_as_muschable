@@ -28,5 +28,9 @@ class MuschableModel < ActiveRecord::Base
   acts_as_muschable :shard_amount => 16
 end
 
+class OtherMuschableModel < ActiveRecord::Base
+  acts_as_muschable :shard_amount => 16
+end
+
 class UnmuschableModel < ActiveRecord::Base
 end

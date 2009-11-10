@@ -66,6 +66,17 @@ module ActiveRecord
               table_name_for_shard(shard)
             end
             
+            def self.detect_shard_amount_in_database
+              result = connection.execute "SHOW TABLES LIKE '\#{table_name_without_shard}%'"
+              tables = []
+              result.each do |row|
+                tables << row[0]
+              end
+              result.free
+              return 0 if tables.size<=1
+              tables.sort.last.gsub(table_name_without_shard, '').to_i + 1
+            end
+            
             #  Sorry for the class << self block, we tried to keep it short.
             class << self
               alias_method_chain :table_name, :shard 

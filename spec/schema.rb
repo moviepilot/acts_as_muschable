@@ -42,10 +42,10 @@ ActiveRecord::Schema.define :version => 0 do
   #
   # Another base shard
   #
-  create_table "more_muschable_models", :force => true do |t|
+  create_table "other_muschable_models", :force => true do |t|
     t.integer  "id",        :limit => 11
     t.string   "name"
   end
-  add_index "more_muschable_models", ["id"], :name => "index_on_id"
+  add_index "other_muschable_models", ["id"], :name => "index_on_id"
   
 end
