@@ -17,15 +17,29 @@ module ActiveRecord
         
         def acts_as_muschable(*args)
           self.class_eval <<-RUBY
+            
+            def self.initialize_shards
+              0.upto(@shard_amount-1) do |i|
+                connection.execute("CREATE TABLE \#{table_name_for_shard(i)} LIKE \#{table_name_without_shard}")
+              end
+            end
+            
+            def self.shard_amount=(amount)
+              ensure_positive_int('shard_amount', amount)
+              @shard_amount = amount
+            end
+            
+            def self.activate_shard(shard)
+              ensure_positive_int('shard identifier', shard)
+              raise ArgumentError, "Can't activate shard, out of range. Adjust \#{self.name}.shard_amount=" unless shard<@shard_amount
 
-            def self.shard_amount=(last)
-              raise ArgumentError, 'Only positive integers are allowed as shard_amount' unless last.is_a?(Integer) and last>=0
-              @shard_amount = last
+              ensure_setup
+              Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
             class << self; attr_reader :shard_amount end
             @shard_amount = nil
-
+            
             def self.table_name_with_shard
               ensure_setup
               return table_name_without_shard if @shard_amount==0
@@ -33,20 +47,12 @@ module ActiveRecord
               shard = Thread.current[:shards][self.name.to_sym]
               raise ArgumentError, 'No shard has been activated' unless shard
               
-              "\#{table_name_without_shard}\#{shard}"
+              table_name_for_shard(shard)
             end
             
             #  Sorry for the class << self block, we tried to keep it short.
             class << self
               alias_method_chain :table_name, :shard 
-            end
-            
-            def self.activate_shard(shard)
-              raise ArgumentError, 'Only positive integers are allowed as shard identifiers'                unless shard.is_a?(Integer) and shard>=0
-              raise ArgumentError, "Can't activate shard, out of range. Adjust \#{self.name}.shard_amount=" unless shard<@shard_amount
-
-              ensure_setup
-              Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
             def self.ensure_setup
@@ -70,6 +76,14 @@ module ActiveRecord
             #
             def self.set_table_name(value = nil, &block)
               define_attr_method :table_name_without_shard, value, &block
+            end
+            
+            def self.table_name_for_shard(shard)
+              "\#{table_name_without_shard}\#{shard}"
+            end
+            
+            def self.ensure_positive_int(name, i)
+              raise ArgumentError, "Only positive integers are allowed as \#{name}" unless i.is_a?(Integer) and i>=0
             end
             
             self.shard_amount = #{args.last[:shard_amount] || 0 }

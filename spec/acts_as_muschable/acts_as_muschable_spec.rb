@@ -27,10 +27,10 @@ describe "Acts as Muschable" do
     it "should only accept positive numeric shard identifiers" do
       lambda{
         MuschableModel.activate_shard("0")
-      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifiers')
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifier')
       lambda{
         MuschableModel.activate_shard(-1)
-      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifiers')
+      }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifier')
     end
     
     it "should be somewhat thread safe" do
@@ -77,7 +77,19 @@ describe "Acts as Muschable" do
       }.should raise_error(ArgumentError, "Can't activate shard, out of range. Adjust MuschableModel.shard_amount=")
     end
     
-    it "should have a method MuschableModel.initialize_shards to create MuschableModel.shard_amount new shards"
+    it "should have a method MuschableModel.initialize_shards to create MuschableModel.shard_amount new shards" do
+      MuschableModel.shard_amount=32
+      connection = mock("Connection")
+      MuschableModel.should_receive(:connection).once.and_return connection
+      0.upto(31) do |i|
+        query = "CREATE TABLE muschable_models#{i} LIKE muschable_models"
+        connection.should_receive(:execute).with(query).once
+      end
+      
+      MuschableModel.initialize_shards
+    end
+    
+    
     it "should have a method MuschableModel.drop_shards(15) to drop shards 0...15"
     it "should have a method MuschableModel.assure_shard_health that goes through all shards and makes sure their structure equals that of the base table"
   end
