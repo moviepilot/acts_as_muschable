@@ -77,6 +77,8 @@ describe "Acts as Muschable" do
       }.should raise_error(ArgumentError, "Can't activate shard, out of range. Adjust MuschableModel.shard_amount=")
     end
     
-    it "should have a method MuschableModel.initialize_shards to drop(!!!) all existing shards and create new ones"
+    it "should have a method MuschableModel.initialize_shards to create MuschableModel.shard_amount new shards"
+    it "should have a method MuschableModel.drop_shards(15) to drop shards 0...15"
+    it "should have a method MuschableModel.assure_shard_health that goes through all shards and makes sure their structure equals that of the base table"
   end
 end
