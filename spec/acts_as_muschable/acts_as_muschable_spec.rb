@@ -85,7 +85,7 @@ describe "Acts as Muschable" do
       
       0.upto(15) do |i|
         query = "CREATE TABLE muschable_models#{i} LIKE muschable_models"
-        connection.should_receive(:execute).with(query).once
+        connection.should_receive(:execute).with(query).once.and_return(mock("execute #{i}", :null_object => true))
       end
       
       MuschableModel.initialize_shards
@@ -99,7 +99,7 @@ describe "Acts as Muschable" do
       
       0.upto(11) do |i|
         query = "DROP TABLE muschable_models#{i}"
-        connection.should_receive(:execute).with(query).once
+        connection.should_receive(:execute).with(query).once.and_return(mock("execute #{i}", :null_object => true))
       end
       
       MuschableModel.drop_shards(12)
@@ -114,7 +114,7 @@ describe "Acts as Muschable" do
     end
     
     it "should have a method MuschableModel.assure_shards_health that goes through all shards and makes sure their structure equals that of the base table" do
-      MuschableModel.should respond_to(:assure_shards_health)
+      MuschableModel.should respond_to(:detect_corrupt_shards)
     end
   end
 end

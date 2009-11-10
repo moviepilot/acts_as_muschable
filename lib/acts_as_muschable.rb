@@ -20,7 +20,7 @@ module ActiveRecord
             
             def self.initialize_shards
               0.upto(@shard_amount-1) do |i|
-                connection.execute("CREATE TABLE \#{table_name_for_shard(i)} LIKE \#{table_name_without_shard}")
+                connection.execute("CREATE TABLE \#{table_name_for_shard(i)} LIKE \#{table_name_without_shard}").free
               end
             end
             
@@ -39,13 +39,20 @@ module ActiveRecord
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
             
-            def self.assure_shards_health
+            def self.detect_corrupt_shards
+              base_schema = connection.execute("DESCRIBE \#{table_name_without_shard}")
+              returning Array.new do |corrupt_shards|
+                0.upto(shard_amount-1) do |shard|
+                  shard_schema = connection.execute("DESCRIBE \#{table_name_for_shard(i)}")
+                  corrupt_shards << shard if shard_schema!=base_schema
+                end
+              end
             end
             
             def self.drop_shards(amount)
               ensure_positive_int('parameter for #drop_shards', amount)
               0.upto(amount-1) do |i|
-                connection.execute("DROP TABLE \#{table_name_for_shard(i)}")
+                connection.execute("DROP TABLE \#{table_name_for_shard(i)}").free
               end
             end
             
