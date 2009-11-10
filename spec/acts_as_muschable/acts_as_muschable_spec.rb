@@ -17,10 +17,28 @@ describe "Acts as Muschable" do
   end
   
   it "should return the correct MuschableModel.table_name according to shard" do
-    MuschableModel.activate_shard("0")
+    MuschableModel.activate_shard(0)
     MuschableModel.table_name.should == "muschable_models0"
     MuschableModel.activate_shard(1)
     MuschableModel.table_name.should == "muschable_models1"
   end
   
+  it "should only accept numeric shard identifiers" do
+    lambda{
+      MuschableModel.activate_shard("0")
+    }.should raise_error(ArgumentError, 'Only integers are allowed as shard identifiers')
+  end
+  
+  it "should be somewhat thread safe" do
+    threads = []
+    300.times do
+      threads << Thread.new do
+        shard = rand(1_000)
+        MuschableModel.activate_shard(shard)
+        sleep(rand(15))
+        MuschableModel.table_name.should == "muschable_models#{shard}"
+      end
+    end
+    threads.each { |thread| thread.join }
+  end
 end

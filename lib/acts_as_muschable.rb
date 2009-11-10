@@ -26,14 +26,13 @@ module ActiveRecord
               "\#{original_table_name}\#{shard}"
             end
             
-            #
             #  Sorry for the class << self block, we tried to keep it short.
-            #
             class << self
               alias_method_chain :table_name, :shard 
             end
             
             def self.activate_shard(shard)
+              raise ArgumentError, 'Only integers are allowed as shard identifiers' unless shard.is_a?(Integer)
               ensure_setup
               Thread.current[:shards][self.name.to_sym] = shard.to_s
             end
