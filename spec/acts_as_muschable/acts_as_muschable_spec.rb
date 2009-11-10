@@ -117,8 +117,4 @@ describe "Acts as Muschable" do
       MuschableModel.should respond_to(:assure_shards_health)
     end
   end
-  
-  describe "integration tests with database access" do
-    
-  end
 end
