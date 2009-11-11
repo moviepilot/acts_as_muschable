@@ -4,11 +4,11 @@ describe "Acts as Muschable" do
 
   describe "integration tests with database access" do
     
-    unless ENV['RUN_MUSCH_INTEGRATION_TESTS']=="true"
+    unless ENV['RUN_MUSCH_FUNCTIONAL_TESTS']=="true"
       puts <<-HELP
-============== INTEGRATION TESTS =======================           <br>
- If you want to run integration tests, set                         <br>
- ENV['RUN_MUSCH_INTEGRATION_TESTS'] to 'true' and call             <br>
+=============== FUNCTIONAL TESTS =======================           <br>
+ If you want to run functional tests on your DB, set               <br>
+ ENV['RUN_MUSCH_FUNCTIONAL_TESTS'] to 'true' and call              <br>
  rake spec again.                                                  <br>
                                                                    <br>
  Then make sure the mysql user rails:rails@localhost               <br>
@@ -37,32 +37,47 @@ describe "Acts as Muschable" do
       MuschableModel.detect_corrupt_shards.should == [1,2]
     end
     
-    it "should drop all shards during #drop_shards"
+    it "should drop all shards during #drop_shards(3)"
+    
+    it "should drop all shards during #drop_shards (automatically guessing how many shards exist)"
     
     it "should create all shards during #initialize_shards" do
-      debugger
       OtherMuschableModel.detect_shard_amount_in_database.should == 0
-      OtherMuschableModel.shard_amount = 10
+      OtherMuschableModel.shard_amount = 3
       OtherMuschableModel.initialize_shards
       
-      OtherMuschableModel.detect_shard_amount_in_database.should == 10
+      OtherMuschableModel.detect_shard_amount_in_database.should == 3
       OtherMuschableModel.detect_corrupt_shards.should be_blank
     end
 
     #
-    # We're keepin' it clean (not) (but kinda)
-    #
+    #  Drop all tables created during this test (i.e. have muschable in their name)
     after(:all) do
-      ActiveRecord::Schema.define :version => 0 do
-        [:muschable_models,
-         :muschable_models0,
-         :muschable_models1,
-         :muschable_models3,
-         :other_muschable_models].each do |table|
-          drop_table table
-        end
-      end
       @conn.execute "DROP TABLE schema_migrations"
+      result = @conn.execute "SHOW TABLES LIKE '%muschable%'"
+      result.each do |row|
+        @conn.execute("DROP TABLE #{row[0]}")
+      end
+      result.free
+    end
+
+  end
+end
+
+def create_base_table_and_shards(table_name, shard_amount)
+  ActiveRecord::Schema.define :version => 0 do
+    create_table table_name, :force => true do |t|
+      t.integer  "id",        :limit => 11
+      t.string   "name"
+    end
+    add_index table_name, ["id"], :name => "index_on_id"
+    
+    0.upto(shard_amount-1) do |i|
+      create_table "#{table_name}#{i}", :force => true do |t|
+        t.integer  "id",                :limit => 11
+        t.string   "name"
+      end
+      add_index "#{table_name}#{i}", ["id"], :name => "index_on_id"
     end
   end
 end

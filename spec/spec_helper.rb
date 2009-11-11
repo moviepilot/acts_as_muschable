@@ -4,14 +4,13 @@ require 'rubygems'
 require 'active_support'
 require 'active_record'
 require 'spec'
-# => require 'spec/rails'
 
 RAILS_DEFAULT_LOGGER = Logger.new(File.join(File.dirname(__FILE__), "debug.log"))
 
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require File.join(File.dirname(__FILE__), '..', 'init')
 
-if ENV['RUN_MUSCH_INTEGRATION_TESTS']=="true"
+if ENV['RUN_MUSCH_FUNCTIONAL_TESTS']=="true"
   ActiveRecord::Base.establish_connection(
     "adapter"  => "mysql",
     "database" => "test",

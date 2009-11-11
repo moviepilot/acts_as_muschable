@@ -28,7 +28,7 @@ module ActiveRecord
         
         def initialize_shards
           0.upto(@shard_amount-1) do |i|
-            connection.execute("CREATE TABLE #{table_name_for_shard(i)} LIKE #{table_name_without_shard}").free
+            connection.execute("CREATE TABLE #{table_name_for_shard(i)} LIKE #{table_name_without_shard}")
           end
         end
 
@@ -57,10 +57,11 @@ module ActiveRecord
           end
         end
 
-        def drop_shards(amount)
+        def drop_shards(amount = nil)
+          amount ||= detect_shard_amount_in_database
           ensure_positive_int('parameter for #drop_shards', amount)
           0.upto(amount-1) do |i|
-            connection.execute("DROP TABLE #{table_name_for_shard(i)}").free
+            connection.execute("DROP TABLE #{table_name_for_shard(i)}")
           end
         end
 
