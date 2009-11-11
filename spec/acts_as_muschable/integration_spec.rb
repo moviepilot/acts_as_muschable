@@ -37,9 +37,26 @@ describe "Acts as Muschable" do
       MuschableModel.detect_corrupt_shards.should == [1,2]
     end
     
-    it "should drop all shards during #drop_shards(3)"
+    it "should drop all shards during #drop_shards(3)" do
+      class YetAnotherMuschableModel < ActiveRecord::Base
+        acts_as_muschable :shard_amount => 5
+      end
+      create_base_table_and_shards "yet_another_muschable_models", 10
+      YetAnotherMuschableModel.detect_shard_amount_in_database.should == 10
+      YetAnotherMuschableModel.drop_shards(10)
+      YetAnotherMuschableModel.detect_shard_amount_in_database.should == 0
+    end
     
-    it "should drop all shards during #drop_shards (automatically guessing how many shards exist)"
+    it "should drop all shards during #drop_shards (automatically guessing how many shards exist)" do
+      class YetYetAnotherMuschableModel < ActiveRecord::Base
+        acts_as_muschable :shard_amount => 5
+      end
+      create_base_table_and_shards "yet_yet_another_muschable_models", 15
+      YetYetAnotherMuschableModel.activate_shard 0
+      YetYetAnotherMuschableModel.detect_shard_amount_in_database.should == 15
+      YetYetAnotherMuschableModel.drop_shards
+      YetYetAnotherMuschableModel.detect_shard_amount_in_database.should == 0
+    end
     
     it "should create all shards during #initialize_shards" do
       OtherMuschableModel.detect_shard_amount_in_database.should == 0

@@ -13,10 +13,10 @@ module ActiveRecord
 
       module ActsAsMuschableLoader
         def acts_as_muschable(*args)
+          raise RuntimeError, "You called acts_as_muschable twice" unless @class_musched.nil?
+          @class_musched = true
           extend ClassMethods
-
           class_eval do
-            #  Sorry for the class << self block, we tried to keep it short.
             class << self; alias_method_chain :table_name, :shard; end
             self.shard_amount = args.last[:shard_amount] || 0
           end
@@ -79,11 +79,11 @@ module ActiveRecord
           result = connection.execute "SHOW TABLES LIKE '#{table_name_without_shard}%'"
           tables = []
           result.each do |row|
-            tables << row[0]
+            tables << row[0].gsub(table_name_without_shard, '').to_i
           end
           result.free
           return 0 if tables.size<=1
-          tables.sort.last.gsub(table_name_without_shard, '').to_i + 1
+          tables.sort.last.to_i + 1
         end
 
 
