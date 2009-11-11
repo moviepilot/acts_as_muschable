@@ -10,7 +10,7 @@ RAILS_DEFAULT_LOGGER = Logger.new(File.join(File.dirname(__FILE__), "debug.log")
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require File.join(File.dirname(__FILE__), '..', 'init')
 
-if ENV['RUN_MUSCH_FUNCTIONAL_TESTS']=="true"
+if ENV['RUN_MUSCH_INTEGRATION_TESTS']=="true"
   ActiveRecord::Base.establish_connection(
     "adapter"  => "mysql",
     "database" => "test",
@@ -20,6 +20,7 @@ if ENV['RUN_MUSCH_FUNCTIONAL_TESTS']=="true"
     "username" => "rails",
     "password" => "rails"
   )
+
   load(File.dirname(__FILE__) + '/schema.rb')
 end
 
@@ -33,3 +34,9 @@ end
 
 class UnmuschableModel < ActiveRecord::Base
 end
+
+BEGIN {
+  def Object.puts(foo)
+    # This is here so the schema definitions don't produce too much output
+  end
+}

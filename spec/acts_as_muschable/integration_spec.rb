@@ -1,24 +1,24 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe "Acts as Muschable" do
-
-  describe "integration tests with database access" do
-    
-    unless ENV['RUN_MUSCH_FUNCTIONAL_TESTS']=="true"
-      puts <<-HELP
-=============== FUNCTIONAL TESTS =======================           <br>
+describe "Integration tests with database access" do
+  
+  unless ENV['RUN_MUSCH_INTEGRATION_TESTS']=="true"
+    puts <<-HELP
+=============== INTEGRATION TESTS =======================          <br>
  If you want to run functional tests on your DB, set               <br>
- ENV['RUN_MUSCH_FUNCTIONAL_TESTS'] to 'true' and call              <br>
+ ENV['RUN_MUSCH_INTEGRATION_TESTS'] to 'true' and call             <br>
  rake spec again.                                                  <br>
                                                                    <br>
  Then make sure the mysql user rails:rails@localhost               <br>
  has all mysql privileges for database 'test' (should              <br>
  work out of the box if you have a rails user in mysql)            <br>
 ========================================================           <br>
-      HELP
-      break 
-    end
-    
+    HELP
+    break 
+  end
+  
+  describe "shard management" do
+
     before(:all) do
       puts "\nRunning integration tests"
       @conn = MuschableModel.connection
@@ -79,8 +79,42 @@ describe "Acts as Muschable" do
     end
 
   end
+
+  describe "objects living in different shards" do
+    
+    before(:all) do
+      class MyMuschableModel < ActiveRecord::Base
+        acts_as_muschable :shard_amount => 2
+      end
+      create_base_table_and_shards "my_muschable_models", 0
+      MyMuschableModel.initialize_shards
+    end
+    
+    it "should create different models in different shards" do
+      MyMuschableModel.activate_shard 0
+      model1_in_shard0 = MyMuschableModel.create :name => "model1_in_shard0"
+      model2_in_shard0 = MyMuschableModel.create :name => "model2_in_shard0"
+      MyMuschableModel.count.should == 2
+      MyMuschableModel.find(model2_in_shard0.id).should == model2_in_shard0
+      
+      MyMuschableModel.activate_shard 1
+      model1_in_shard1 = MyMuschableModel.create :name => "model1_in_shard1"
+      MyMuschableModel.count.should == 1
+      MyMuschableModel.destroy_all
+      MyMuschableModel.count.should == 0
+
+      MyMuschableModel.activate_shard 0
+      MyMuschableModel.count.should == 2
+    end
+    
+  end
+
 end
 
+
+#
+#  Santa's little helper
+#
 def create_base_table_and_shards(table_name, shard_amount)
   ActiveRecord::Schema.define :version => 0 do
     create_table table_name, :force => true do |t|
