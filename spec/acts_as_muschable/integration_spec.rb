@@ -38,7 +38,16 @@ describe "Acts as Muschable" do
     end
     
     it "should drop all shards during #drop_shards"
-    it "should create all shards during #initialize_shards"
+    
+    it "should create all shards during #initialize_shards" do
+      debugger
+      OtherMuschableModel.detect_shard_amount_in_database.should == 0
+      OtherMuschableModel.shard_amount = 10
+      OtherMuschableModel.initialize_shards
+      
+      OtherMuschableModel.detect_shard_amount_in_database.should == 10
+      OtherMuschableModel.detect_corrupt_shards.should be_blank
+    end
 
     #
     # We're keepin' it clean (not) (but kinda)

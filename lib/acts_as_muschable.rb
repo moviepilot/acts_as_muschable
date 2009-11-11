@@ -20,7 +20,8 @@ module ActiveRecord
             
             def self.initialize_shards
               0.upto(@shard_amount-1) do |i|
-                connection.execute("CREATE TABLE \#{table_name_for_shard(i)} LIKE \#{table_name_without_shard}").free
+                result = connection.execute("CREATE TABLE \#{table_name_for_shard(i)} LIKE \#{table_name_without_shard}")
+                result.free if result
               end
             end
             
