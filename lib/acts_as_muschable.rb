@@ -8,6 +8,7 @@ module ActiveRecord
   module Acts
     module Muschable
       def self.included(base)
+        raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.3.3" if defined?(::Rails) and ::Rails.version>'2.3.3'
         base.extend(ActsAsMuschableLoader)
       end
 
@@ -92,6 +93,32 @@ module ActiveRecord
           Thread.current[:shards] ||= Hash.new
         end
 
+        def table_name_for_shard(shard)
+          "#{table_name_without_shard}#{shard}"
+        end
+
+        def ensure_positive_int(name, i)
+          raise ArgumentError, "Only positive integers are allowed as #{name}" unless i.is_a?(Integer) and i>=0
+        end
+
+        def table_schema(table_name)
+          result = connection.execute "SHOW CREATE TABLE #{table_name}"
+          schema = ""
+          result.each do |row|
+            schema << row[1]
+          end
+          schema
+        rescue ActiveRecord::StatementInvalid
+          ""
+        ensure
+          result.free if result
+        end
+        
+        def extract_relevant_part_from_schema_definition(definition)
+          definition.gsub!(/ AUTO_INCREMENT=[\d]+/, '')
+          definition.match(/[^\(]+(.*)$/m)[1]
+        end
+        
         #
         #  This is here because ActiveRecord::Base's table_name method
         #  does something funky. If you call ActiveRecord::Base#table_name
@@ -110,26 +137,6 @@ module ActiveRecord
           define_attr_method :table_name_without_shard, value, &block
         end
 
-        def table_name_for_shard(shard)
-          "#{table_name_without_shard}#{shard}"
-        end
-
-        def ensure_positive_int(name, i)
-          raise ArgumentError, "Only positive integers are allowed as #{name}" unless i.is_a?(Integer) and i>=0
-        end
-
-        def table_schema(table_name)
-          result = connection.execute "SHOW CREATE TABLE #{table_name}"
-          schema = ""
-          result.each do |row|
-            schema << row[1]
-          end
-          schema.match(/[^\(]+(.*)$/m)[1]
-        rescue ActiveRecord::StatementInvalid
-          ""
-        ensure
-          result.free if result
-        end
       end
     end
   end

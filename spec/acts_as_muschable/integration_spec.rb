@@ -3,16 +3,15 @@ require File.dirname(__FILE__) + '/../spec_helper'
 describe "Integration tests with database access" do
   
   unless ENV['RUN_MUSCH_INTEGRATION_TESTS']=="true"
-    puts <<-HELP
-=============== INTEGRATION TESTS =======================          <br>
- If you want to run functional tests on your DB, set               <br>
- ENV['RUN_MUSCH_INTEGRATION_TESTS'] to 'true' and call             <br>
- rake spec again.                                                  <br>
-                                                                   <br>
- Then make sure the mysql user rails:rails@localhost               <br>
- has all mysql privileges for database 'test' (should              <br>
- work out of the box if you have a rails user in mysql)            <br>
-========================================================           <br>
+    print <<-HELP
+<pre>==================== INTEGRATION TESTS ===========================
+ If you want to run functional tests on your DB, set
+ ENV['RUN_MUSCH_INTEGRATION_TESTS'] to 'true' and call rake spec again.
+
+ Then make sure the mysql user rails:rails@localhost has all mysql
+ privileges for database 'test' (should work out of the box if you 
+ have a rails user in mysql)
+=================================================================</pre>
     HELP
     break 
   end

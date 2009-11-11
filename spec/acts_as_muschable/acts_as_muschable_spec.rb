@@ -117,4 +117,81 @@ describe "Acts as Muschable" do
       MuschableModel.should respond_to(:detect_corrupt_shards)
     end
   end
+
+  describe "utility methods" do
+    it "should extract the relevant parts from a schema definition in order to compare definitions" do
+      base_table_definition =<<-SQL
+        CREATE TABLE `movies_users` (
+          `user_id` int(11) DEFAULT NULL,
+          `movie_id` int(11) DEFAULT NULL,
+          `rating_date` datetime DEFAULT NULL,
+          `rating` int(3) DEFAULT NULL,
+          `top` tinyint(1) NOT NULL DEFAULT '0',
+          `flop` tinyint(1) NOT NULL DEFAULT '0',
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `watchlist` tinyint(1) NOT NULL DEFAULT '0',
+          `blacklist` tinyint(1) NOT NULL DEFAULT '0',
+          `watchlist_date` datetime DEFAULT NULL,
+          `blacklist_date` datetime DEFAULT NULL,
+          `forecast` float DEFAULT NULL,
+          `forecast_relevance` float DEFAULT NULL,
+          `forecast_neighbour_count` int(4) DEFAULT NULL,
+          `forecast_or_rating` int(3) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `index_movies_users_on_user_id_and_movie_id` (`user_id`,`movie_id`),
+          KEY `user_ratings` (`movie_id`,`user_id`,`rating`),
+          KEY `index_movies_users_on_updated_at_and_id` (`rating_date`,`id`),
+          KEY `movie_id_and_rating_date` (`movie_id`,`rating_date`),
+          KEY `movie_id_and_user_id_and_forecast_or_rating` (`movie_id`,`user_id`,`forecast_or_rating`),
+          KEY `rating_date` (`rating_date`),
+          KEY `top` (`top`),
+          KEY `flop` (`flop`),
+          KEY `index_movies_users_on_user_id_and_blacklist_and_movie_id` (`user_id`,`blacklist`,`movie_id`),
+          KEY `movies_users_on_user_id_and_rating_and_movie_id` (`user_id`,`rating`,`movie_id`),
+          KEY `movies_users_on_movie_id_and_rating` (`movie_id`,`rating`),
+          KEY `movies_users_on_rating_and_user_id_and_movie_id` (`rating`,`user_id`,`movie_id`),
+          KEY `user_id_and_movie_id_and_forecast_or_rating_on_movies_users` (`user_id`,`movie_id`,`forecast_or_rating`)
+        ) ENGINE=MyISAM AUTO_INCREMENT=241855247 DEFAULT CHARSET=utf8
+      SQL
+
+      shard_table_definition =<<-SQL
+        CREATE TABLE `movies_users0` (
+          `user_id` int(11) DEFAULT NULL,
+          `movie_id` int(11) DEFAULT NULL,
+          `rating_date` datetime DEFAULT NULL,
+          `rating` int(3) DEFAULT NULL,
+          `top` tinyint(1) NOT NULL DEFAULT '0',
+          `flop` tinyint(1) NOT NULL DEFAULT '0',
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `watchlist` tinyint(1) NOT NULL DEFAULT '0',
+          `blacklist` tinyint(1) NOT NULL DEFAULT '0',
+          `watchlist_date` datetime DEFAULT NULL,
+          `blacklist_date` datetime DEFAULT NULL,
+          `forecast` float DEFAULT NULL,
+          `forecast_relevance` float DEFAULT NULL,
+          `forecast_neighbour_count` int(4) DEFAULT NULL,
+          `forecast_or_rating` int(3) DEFAULT NULL,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `index_movies_users_on_user_id_and_movie_id` (`user_id`,`movie_id`),
+          KEY `user_ratings` (`movie_id`,`user_id`,`rating`),
+          KEY `index_movies_users_on_updated_at_and_id` (`rating_date`,`id`),
+          KEY `movie_id_and_rating_date` (`movie_id`,`rating_date`),
+          KEY `movie_id_and_user_id_and_forecast_or_rating` (`movie_id`,`user_id`,`forecast_or_rating`),
+          KEY `rating_date` (`rating_date`),
+          KEY `top` (`top`),
+          KEY `flop` (`flop`),
+          KEY `index_movies_users_on_user_id_and_blacklist_and_movie_id` (`user_id`,`blacklist`,`movie_id`),
+          KEY `movies_users_on_user_id_and_rating_and_movie_id` (`user_id`,`rating`,`movie_id`),
+          KEY `movies_users_on_movie_id_and_rating` (`movie_id`,`rating`),
+          KEY `movies_users_on_rating_and_user_id_and_movie_id` (`rating`,`user_id`,`movie_id`),
+          KEY `user_id_and_movie_id_and_forecast_or_rating_on_movies_users` (`user_id`,`movie_id`,`forecast_or_rating`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=utf8
+      SQL
+
+      base_definition  = MuschableModel.extract_relevant_part_from_schema_definition(base_table_definition)
+      shard_definition = MuschableModel.extract_relevant_part_from_schema_definition(shard_table_definition)
+      
+      shard_definition.should == base_definition
+    end
+  end
 end
