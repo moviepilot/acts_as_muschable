@@ -35,8 +35,13 @@ end
 class UnmuschableModel < ActiveRecord::Base
 end
 
+# This is here so the schema definitions don't produce too much output
 BEGIN {
-  def Object.puts(foo)
-    # This is here so the schema definitions don't produce too much output
+  class<<Object
+    def puts_with_crap_cleansing(msg)
+      puts_without_crap_cleansing(msg) if ['-- ', '   ->'].reject{|⎮| msg.starts_with?(⎮)}.count == 2
+    end
+    alias_method :puts_without_crap_cleansing, :puts
+    alias_method :puts, :puts_with_crap_cleansing
   end
 }

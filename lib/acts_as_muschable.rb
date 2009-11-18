@@ -49,10 +49,10 @@ module ActiveRecord
         end
 
         def detect_corrupt_shards
-          base_schema = table_schema(table_name_without_shard)
+          base_schema = extract_relevant_part_from_schema_definition(table_schema(table_name_without_shard))
           returning Array.new do |corrupt_shards|
             0.upto(shard_amount-1) do |shard|
-              shard_schema = table_schema(table_name_for_shard(shard))
+              shard_schema = extract_relevant_part_from_schema_definition(table_schema(table_name_for_shard(shard)))
               corrupt_shards << shard if shard_schema!=base_schema or base_schema.blank?
             end
           end
@@ -116,7 +116,9 @@ module ActiveRecord
         
         def extract_relevant_part_from_schema_definition(definition)
           definition.gsub!(/ AUTO_INCREMENT=[\d]+/, '')
-          definition.match(/[^\(]+(.*)$/m)[1]
+          match = definition.match(/[^\(]+(.*)$/m)
+          return match[1] if match
+          ""
         end
         
         #

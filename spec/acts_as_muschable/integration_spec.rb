@@ -32,8 +32,13 @@ describe "Integration tests with database access" do
     end
     
     it "should detect corrupt shards during #detect_corrupt_shards" do
-      MuschableModel.shard_amount = 3
-      MuschableModel.detect_corrupt_shards.should == [1,2]
+      MuschableModel.shard_amount = 4
+      MuschableModel.detect_corrupt_shards.should == [1,2,3] 
+    end
+    
+    it "should not detect corrupt shards when database is healthy" do
+      MuschableModel.shard_amount = 1
+      MuschableModel.detect_corrupt_shards.should be_blank
     end
     
     it "should drop all shards during #drop_shards(3)" do
@@ -66,17 +71,6 @@ describe "Integration tests with database access" do
       OtherMuschableModel.detect_corrupt_shards.should be_blank
     end
 
-    #
-    #  Drop all tables created during this test (i.e. have muschable in their name)
-    after(:all) do
-      @conn.execute "DROP TABLE schema_migrations"
-      result = @conn.execute "SHOW TABLES LIKE '%muschable%'"
-      result.each do |row|
-        @conn.execute("DROP TABLE #{row[0]}")
-      end
-      result.free
-    end
-
   end
 
   describe "objects living in different shards" do
@@ -87,6 +81,7 @@ describe "Integration tests with database access" do
       end
       create_base_table_and_shards "my_muschable_models", 0
       MyMuschableModel.initialize_shards
+      @conn = MuschableModel.connection
     end
     
     it "should create different models in different shards" do
@@ -105,9 +100,19 @@ describe "Integration tests with database access" do
       MyMuschableModel.activate_shard 0
       MyMuschableModel.count.should == 2
     end
-    
+
   end
 
+  #
+  #  Drop all tables created during this test (i.e. have muschable in their name)
+  after(:all) do
+    @conn.execute "DROP TABLE schema_migrations"
+    result = @conn.execute "SHOW TABLES LIKE '%muschable%'"
+    result.each do |row|
+      @conn.execute("DROP TABLE #{row[0]}")
+    end
+    result.free
+  end
 end
 
 

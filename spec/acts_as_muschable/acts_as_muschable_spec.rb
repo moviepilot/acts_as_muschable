@@ -33,7 +33,7 @@ describe "Acts as Muschable" do
       }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifier')
     end
     
-    it "should be somewhat thread safe" do
+    xit "should be somewhat thread safe" do
       MuschableModel.shard_amount = 1_000_000
       threads = []
       300.times do
