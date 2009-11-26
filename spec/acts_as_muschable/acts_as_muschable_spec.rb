@@ -17,11 +17,17 @@ describe "Acts as Muschable" do
       MuschableModel.should respond_to(:activate_shard)
     end
     
+    it "should be able to MuschableModel.activate_base_shard" do
+      MuschableModel.should respond_to(:activate_base_shard)
+    end
+    
     it "should return the correct MuschableModel.table_name according to shard" do
       MuschableModel.activate_shard(0)
       MuschableModel.table_name.should == "muschable_models0"
       MuschableModel.activate_shard(1)
       MuschableModel.table_name.should == "muschable_models1"
+      MuschableModel.activate_base_shard
+      MuschableModel.table_name.should == "muschable_models"
     end
     
     it "should only accept positive numeric shard identifiers" do
@@ -33,15 +39,18 @@ describe "Acts as Muschable" do
       }.should raise_error(ArgumentError, 'Only positive integers are allowed as shard identifier')
     end
     
-    xit "should be somewhat thread safe" do
+    it "should be somewhat thread safe" do
       MuschableModel.shard_amount = 1_000_000
       threads = []
       300.times do
         threads << Thread.new do
           shard = rand(1_000_000)
           MuschableModel.activate_shard(shard)
-          sleep(rand(15))
+          sleep(rand(10))
           MuschableModel.table_name.should == "muschable_models#{shard}"
+          MuschableModel.activate_base_shard
+          sleep(rand(5))
+          MuschableModel.table_name.should == "muschable_models"
         end
       end
       threads.each { |thread| thread.join }

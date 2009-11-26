@@ -47,6 +47,11 @@ module ActiveRecord
           ensure_setup
           Thread.current[:shards][self.name.to_sym] = shard.to_s
         end
+        
+        def activate_base_shard
+          ensure_setup
+          Thread.current[:shards][self.name.to_sym] = -1
+        end
 
         def detect_corrupt_shards
           base_schema = extract_relevant_part_from_schema_definition(table_schema(table_name_without_shard))
@@ -68,11 +73,10 @@ module ActiveRecord
 
         def table_name_with_shard
           ensure_setup
-          return table_name_without_shard if @shard_amount==0
-
           shard = Thread.current[:shards][self.name.to_sym]
-          raise ArgumentError, 'No shard has been activated' unless shard
 
+          return table_name_without_shard if @shard_amount==0 or shard == -1
+          raise ArgumentError, 'No shard has been activated' unless shard
           table_name_for_shard(shard)
         end
 
