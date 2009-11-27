@@ -93,13 +93,12 @@ module ActiveRecord
 
         def shard_levels
           return [] unless shard_amount > 0
-          levels = p[]
-          [0..shard_amount].each do |i|
+          levels = []
+          (0...shard_amount).each do |i|
             result = connection.execute "SELECT COUNT(*) FROM #{table_name_for_shard(i)}"
             result.each do |row|
-              levels[i] = row[1]
+              levels[i] = row[0].to_i
             end
-            schema
           end
           levels
         end
