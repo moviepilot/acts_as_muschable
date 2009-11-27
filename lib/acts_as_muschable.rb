@@ -91,6 +91,18 @@ module ActiveRecord
           tables.sort.last.to_i + 1
         end
 
+        def shard_levels
+          return [] unless shard_amount > 0
+          levels = p[]
+          [0..shard_amount].each do |i|
+            result = connection.execute "SELECT COUNT(*) FROM #{table_name_for_shard(i)}"
+            result.each do |row|
+              levels[i] = row[1]
+            end
+            schema
+          end
+          levels
+        end
 
         def ensure_setup
           raise ArgumentError, "You have to set #{self.name}.shard_amount" if @shard_amount.nil?

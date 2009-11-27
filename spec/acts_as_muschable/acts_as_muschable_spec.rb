@@ -128,6 +128,11 @@ describe "Acts as Muschable" do
   end
 
   describe "utility methods" do
+    
+    it "should have a method :shard_level to deliver statistics about how many rows each shard has" do
+      MuschableModel.should respond_to(:shard_levels)
+    end
+    
     it "should extract the relevant parts from a schema definition in order to compare definitions" do
       base_table_definition =<<-SQL
         CREATE TABLE `movies_users` (
