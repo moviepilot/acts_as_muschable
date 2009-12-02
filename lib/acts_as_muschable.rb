@@ -8,7 +8,7 @@ module ActiveRecord
   module Acts
     module Muschable
       def self.included(base)
-        raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.3.3" if defined?(::Rails) and ::Rails.version>'2.3.3'
+        raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.3.3" if defined?(::Rails) and ::Rails.version>'2.3.5'
         base.extend(ActsAsMuschableLoader)
       end
 
