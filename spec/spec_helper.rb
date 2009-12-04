@@ -35,6 +35,31 @@ end
 class UnmuschableModel < ActiveRecord::Base
 end
 
+class MuschableAssociationBase < ActiveRecord::Base
+  acts_as_muschable :shard_amount => 16
+  
+  belongs_to :muschable_belongs_to_association
+  has_one :muschable_has_one_association
+  has_many :muschable_has_many_associations
+  has_and_belongs_to_many :muschable_habtm_associations
+end
+
+class MuschableBelongsToAssociation < ActiveRecord::Base
+  has_many :muschable_association_bases
+end
+
+class MuschableHasOneAssociation < ActiveRecord::Base
+  belongs_to :muschable_association_base
+end
+
+class MuschableHasManyAssociation < ActiveRecord::Base
+  belongs_to :muschable_association_base
+end
+
+class MuschableHabtmAssociation < ActiveRecord::Base
+  has_and_belongs_to_many :muschable_association_bases
+end
+  
 # This is here so the schema definitions don't produce too much output
 BEGIN {
   class<<Object

@@ -10,8 +10,49 @@ module ActiveRecord
       def self.included(base)
         raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.3.3" if defined?(::Rails) and ::Rails.version>'2.3.5'
         base.extend(ActsAsMuschableLoader)
+        base.extend(MuschableReflections)
       end
 
+      module MuschableReflections
+        class MuschableAssociationReflection < ActiveRecord::Base::AssociationReflection
+          def table_name
+            klass.table_name
+          end
+
+          def quoted_table_name
+            klass.quoted_table_name
+          end
+        end
+        
+        class MuschableThroughReflection < ActiveRecord::Base::ThroughReflection
+          def table_name
+            klass.table_name
+          end
+
+          def quoted_table_name
+            klass.quoted_table_name
+          end
+        end
+
+        # copied from activerecord-2.1.1/lib/active_record/reflection.rb
+        # may cause problems in case it changes in later versions of activerecord
+        def create_reflection(macro, name, options, active_record)
+          case macro
+            when :has_many, :belongs_to, :has_one, :has_and_belongs_to_many
+              if defined?(::Rails) and ::Rails.version > '2.3.0'
+                klass = options[:through] ? MuschableThroughReflection : MuschableAssociationReflection
+              else
+                klass = MuschableAssociationReflection
+              end
+              reflection = klass.new(macro, name, options, active_record)
+            when :composed_of
+              reflection = AggregateReflection.new(macro, name, options, active_record)
+          end
+          write_inheritable_hash :reflections, name => reflection
+          reflection
+        end
+      end
+      
       module ActsAsMuschableLoader
         def acts_as_muschable(*args)
           raise RuntimeError, "You called acts_as_muschable twice" unless @class_musched.nil?
@@ -26,7 +67,7 @@ module ActiveRecord
       end
 
       module ClassMethods
-        
+
         def initialize_shards
           0.upto(@shard_amount-1) do |i|
             connection.execute("CREATE TABLE #{table_name_for_shard(i)} LIKE #{table_name_without_shard}")
