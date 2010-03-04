@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe "Acts as Muschable" do
   
+  before(:all) do
+    Thread.current[:shards] = nil
+  end
+  
   describe "changing active shards" do
     it "should throw an exception when MuschableModel.table_name is called before MuschableModel.set_shard" do
       lambda{ 

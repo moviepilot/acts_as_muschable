@@ -19,6 +19,7 @@ describe "Integration tests with database access" do
   describe "shard management" do
 
     before(:all) do
+      Thread.current[:shards] = nil
       puts "\nRunning integration tests"
       @conn = MuschableModel.connection
     end

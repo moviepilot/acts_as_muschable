@@ -5,10 +5,28 @@
 #  connection level.
 #
 module ActiveRecord
+  
+  # originally table_name and quoted_table_name are cached both in the model 
+  # and in the reflection object. disabling the cache in the reflection object
+  # doesn't mean the table name is recalculated on every access, it only gets
+  # delegated to (the cached) ReflectedModel.table_name every time, meaning
+  # one more method call.
+  module Reflection
+    class AssociationReflection
+      def table_name
+        klass.table_name
+      end
+  
+      def quoted_table_name
+        klass.quoted_table_name
+      end
+    end
+  end
+  
   module Acts
     module Muschable
       def self.included(base)
-        raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.1.1" if defined?(::Rails) and ::Rails.version != '2.1.1'
+        raise StandardError, "acts_as_muschable is only tested against ActiveRecord -v=2.3.5" if defined?(::Rails) and ::Rails.version>'2.3.5'
         base.extend(ActsAsMuschableLoader)
       end
 
@@ -23,27 +41,6 @@ module ActiveRecord
           end
         end
         private :acts_as_muschable
-        
-        def create_reflection(macro, name, options, active_record)
-          case macro
-            when :has_many, :belongs_to, :has_one, :has_and_belongs_to_many
-              reflection = MuschableAssociationReflection.new(macro, name, options, active_record)
-            when :composed_of
-              reflection = AggregateReflection.new(macro, name, options, active_record)
-          end
-          write_inheritable_hash :reflections, name => reflection
-          reflection
-        end
-        
-        class MuschableAssociationReflection < ActiveRecord::Base::AssociationReflection
-          def table_name
-            klass.table_name
-          end
-          
-          def quoted_table_name
-            klass.quoted_table_name
-          end
-        end
       end
 
       module ClassMethods
