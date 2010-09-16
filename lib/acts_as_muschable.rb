@@ -171,7 +171,20 @@ module ActiveRecord
         def set_table_name(value = nil, &block)
           define_attr_method :table_name_without_shard, value, &block
         end
-
+        
+        def each_shard(shards = (0...@shard_amount))
+          failed_shards = []
+          shards.each do |i|
+            ensure_positive_int("parameter for #each_shard", i)
+            begin
+              activate_shard(i)
+              yield
+            rescue
+              failed_shards << i
+            end
+          end if block_given?
+          return {:failed_shards => failed_shards}
+        end
       end
     end
   end

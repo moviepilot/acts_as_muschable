@@ -59,6 +59,18 @@ describe "Acts as Muschable" do
       end
       threads.each { |thread| thread.join }
     end
+    
+    it "should iterate through all shards using #each_shard" do
+      MuschableModel.shard_amount = 3
+      tablenames = []
+      MuschableModel.each_shard { tablenames << MuschableModel.table_name_with_shard }.should == {:failed_shards => []}
+      tablenames.should == ["muschable_models0", "muschable_models1", "muschable_models2"]
+    end
+    
+    it "#each_shard should return failed shards correctly" do
+      MuschableModel.shard_amount = 3
+      MuschableModel.each_shard([0,1,2,3]){}.should == {:failed_shards => [3]}
+    end
   end
   
   describe "managing the amount of shards" do
